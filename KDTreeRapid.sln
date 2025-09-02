@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36109.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KDTreeRapid", "KDTreeRapid\KDTreeRapid.csproj", "{39B6CE64-E3C6-0E3F-8978-B75F78595CFC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KDTreeRapid_Test", "KDTreeRapid_Test\KDTreeRapid_Test.csproj", "{8F972A4E-CDC3-1C04-28B0-3D2CC285398F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{39B6CE64-E3C6-0E3F-8978-B75F78595CFC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{39B6CE64-E3C6-0E3F-8978-B75F78595CFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{39B6CE64-E3C6-0E3F-8978-B75F78595CFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{39B6CE64-E3C6-0E3F-8978-B75F78595CFC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8F972A4E-CDC3-1C04-28B0-3D2CC285398F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8F972A4E-CDC3-1C04-28B0-3D2CC285398F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8F972A4E-CDC3-1C04-28B0-3D2CC285398F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8F972A4E-CDC3-1C04-28B0-3D2CC285398F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {72EE0FE3-254C-449D-865D-CBC210AEE527}
+	EndGlobalSection
+EndGlobal

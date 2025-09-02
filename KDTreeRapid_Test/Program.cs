@@ -54,7 +54,7 @@ internal class Program {
                 KDTreeRapid<double, Node> kdtree = new();
                 var span = CollectionsMarshal.AsSpan(elements);
                 kdtree.BuildInPlace(span, DIM);
-                kdtree.Check(span);
+                kdtree.Check(span, DIM);
                 var p = new double[DIM];
                 for(int j = 0; j < p.Length; j++) {
                     p[j] = rnd2.NextDouble() * 10;

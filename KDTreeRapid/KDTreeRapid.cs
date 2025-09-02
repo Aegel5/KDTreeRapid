@@ -102,23 +102,24 @@ public class KDTreeRapid<T, TElement>
             return;
         int axis = depth % dim_cnt;
         int median_i = elements.Length / 2;
+        var node = elements[median_i];
         for(int i = 0; i < median_i; i++) {
-            if (elements[i].GetForDimension(axis) > elements[i].GetForDimension(axis)) {
+            if (elements[i].GetForDimension(axis) > node.GetForDimension(axis)) {
                 throw new Exception("bad tree");
             }
         }
         for (int i = median_i+1; i < elements.Length; i++) {
-            if (elements[i].GetForDimension(axis) < elements[i].GetForDimension(axis)) {
+            if (elements[i].GetForDimension(axis) < node.GetForDimension(axis)) {
                 throw new Exception("bad tree");
             }
         }
         CheckRecursive(Left(elements, median_i), dim_cnt, depth + 1);
         CheckRecursive(Right(elements, median_i), dim_cnt, depth + 1);
     }
-    public void Check(Span<TElement> elements, int dim_cnt = 2) {
+    public void Check(Span<TElement> elements, int dim_cnt) {
         CheckRecursive(elements, dim_cnt, 0);
     }
-    public void BuildInPlace(Span<TElement> elements, int dim_cnt = 2) {
+    public void BuildInPlace(Span<TElement> elements, int dim_cnt) {
         BuildRecursive(elements, dim_cnt, 0);
     }
 

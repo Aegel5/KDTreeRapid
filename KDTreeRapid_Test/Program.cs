@@ -77,20 +77,22 @@ internal class Program {
         //int seed = rnd2.Next();
         int seed = 11122;
         {
-            var timer = Stopwatch.StartNew();
+            double time = 0;
             double sign = 0;
             rnd2 = new Random(seed);
             for (int i = 0; i < N; i++) {
                 var elements = Generate(CNT);
+                var timer = Stopwatch.StartNew();
                 elements.Sort((x, y) => x.x.CompareTo(y.x));
+                time += timer.Elapsed.TotalSeconds;
                 foreach (var elem in elements) {
                     sign += elem.GetForDimension(1);
                 }
             }
-            Console.WriteLine($"SORTING {timer.Elapsed.TotalSeconds} {sign}");
+            Console.WriteLine($"SORTING {time} {sign}");
         }
         foreach (var DIM in new []{ 2, 3, 5 }) {
-            Console.WriteLine($"DIMINSIONS {DIM}");
+            Console.WriteLine($"DIMENSIONS {DIM}");
             {
                 var timer = Stopwatch.StartNew();
                 double build_time = 0;

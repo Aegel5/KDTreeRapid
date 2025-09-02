@@ -21,3 +21,4 @@ List<(Node elem, double dist)> res = new();
 double rad = 5;
 kdtree.SearchSorted(span, new double[]{10,20}, res, rad*rad, 10);
 ```
+Full example: https://github.com/Aegel5/KDTreeRapid/blob/main/KDTreeRapid_Test/Program.cs

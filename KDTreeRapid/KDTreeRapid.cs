@@ -225,18 +225,18 @@ public class KDTreeRapid<T, TElement>
     public List<(TElement element, double distL2)> SearchSorted(
         List<TElement> elements,
         T[] point,
-        double radiusL2 = double.MaxValue,
+        double radius = double.MaxValue,
         int max_cnt = 10,
         List<(TElement, double)>? result = null) {
 
-        return SearchSorted(CollectionsMarshal.AsSpan(elements), point, radiusL2, max_cnt, result);
+        return SearchSorted(CollectionsMarshal.AsSpan(elements), point, radius, max_cnt, result);
     }
 
     // Возвращает индексы ближайших объектов в отсортированном порядке.
     public List<(TElement element, double distL2)> SearchSorted(
         Span<TElement> elements,
         T[] point,
-        double radiusL2 = double.MaxValue,
+        double radius = double.MaxValue,
         int max_cnt = 10,
         List<(TElement element, double distL2)>? result = null
         ) {
@@ -247,7 +247,7 @@ public class KDTreeRapid<T, TElement>
             result.Clear();
         }
         SearchContext ctx = new SearchContext {
-            restriction_radiusL2 = radiusL2,
+            restriction_radiusL2 = radius*radius,
             restriction_max_cnt = max_cnt,
             point = point,
             Visit = (x, dist) => {

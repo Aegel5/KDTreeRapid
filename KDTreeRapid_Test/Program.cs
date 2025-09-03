@@ -74,11 +74,11 @@ class Program {
                     for (int j = 0; j < p.Length; j++) {
                         p[j] = rnd.NextDouble() * 10;
                     }
-                    double rad = rnd.NextDouble() * 100;
+                    double rad = rnd.NextDouble() * 5;
                     int max_cnt = rnd.Next(0, elements.Count);
                     var res = kdtree.SearchSorted(elements, p, rad, max_cnt);
 
-                    var need = elements.Where(x => kdtree.DistanceL2(p, x) <= rad).OrderBy(x => kdtree.DistanceL2(p, x)).Take(max_cnt);
+                    var need = elements.Where(x => kdtree.DistanceL2(p, x) <= rad*rad).OrderBy(x => kdtree.DistanceL2(p, x)).Take(max_cnt);
                     if (!need.SequenceEqual(res.Select(x => x.element))) {
                         throw new Exception("bad");
                     }

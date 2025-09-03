@@ -13,13 +13,23 @@ The Kd-tree is written entirely in C# without any dependencies.
 
 ## Example
 ```csharp
-var elements = Generate(1000);
-KDTreeRapid<double, Node> kdtree = new();
-var span = CollectionsMarshal.AsSpan(elements);
-kdtree.BuildInPlace(span, 2);
-List<(Node elem, double dist)> res = new();
-double rad = 5;
-kdtree.SearchSorted(span, new double[]{10,20}, res, rad*rad, 10);
+class Node : IKDTreeElement<double> {
+    public double X;
+    public double Y;
+    public double GetForDimension(int dim_index) {
+        return dim_index == 0 ? X : Y;
+    }
+}
+internal class Program {
+    static void Main(string[] args) {
+        List<Node> elements = Generate(1000);
+        KDTreeRapid<double, Node> kdtree = new();
+        kdtree.BuildInPlace(elements, dimensions:2);
+        double rad = 5;
+        var res = kdtree.SearchSorted(elements, [10, 20], rad * rad, max_cnt: 1);
+        Console.WriteLine($"Nearest point: {res[0].element.X} {res[0].element.Y}");
+    }
+}
 ```
 Full example: https://github.com/Aegel5/KDTreeRapid/blob/main/KDTreeRapid_Test/Program.cs
 

@@ -192,7 +192,7 @@ public class Config : ManualConfig {
 
 public class MyBenchmarks {
 
-    static List<Node> elements;
+    List<Node> elements;
 
     [IterationSetup]
     public void Setup() {

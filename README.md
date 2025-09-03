@@ -35,16 +35,16 @@ Full example: https://github.com/Aegel5/KDTreeRapid/blob/main/KDTreeRapid_Test/P
 ## Benchmarks
 Build 300000 points
 ```
-| Method                 | Mean      | Error     | StdDev    | Median    |
-|----------------------- |----------:|----------:|----------:|----------:|
-| KDTreeRapid_BuildTree  | 110.43 ms |  2.064 ms |  2.825 ms | 109.54 ms |
-| Supercluster_BuildTree | 941.21 ms | 16.483 ms | 15.418 ms | 939.52 ms |
-| List_Sort              |  59.65 ms |  1.054 ms |  2.643 ms |  58.76 ms |
+| Method                 | Mean      | StdDev    |
+|----------------------- |----------:|----------:|
+| KDTreeRapid_BuildTree  | 125.75 ms |  6.381 ms |
+| Supercluster_BuildTree | 999.82 ms | 29.974 ms |
+| List_Sort              |  66.13 ms |  2.099 ms |
 ```
 Search 3 nearest for each point
 ```
-| Method              | Mean     | Error    | StdDev   |
-|-------------------- |---------:|---------:|---------:|
-| KDTreeRapid_Search  | 262.5 ms |  3.94 ms |  3.50 ms |
-| Supercluster_Search | 765.3 ms | 14.52 ms | 15.54 ms |
+| Method              | Mean     | StdDev   |
+|-------------------- |---------:|---------:|
+| KDTreeRapid_Search  | 255.2 ms |  2.62 ms |
+| Supercluster_Search | 722.9 ms | 13.99 ms |
 ```

@@ -222,26 +222,30 @@ public class KDTreeRapid<T, TElement>
         SearchRecursive(elements, ctx, 0, default, default);
     }
 
-    public void SearchSorted(
+    public List<(TElement element, double distL2)> SearchSorted(
         List<TElement> elements,
         T[] point,
-        List<(TElement elem, double dist)> result,
         double radiusL2 = double.MaxValue,
-        int max_cnt = 10) {
+        int max_cnt = 10,
+        List<(TElement, double)>? result = null) {
 
-        SearchSorted(CollectionsMarshal.AsSpan(elements), point, result, radiusL2, max_cnt);
+        return SearchSorted(CollectionsMarshal.AsSpan(elements), point, radiusL2, max_cnt, result);
     }
 
     // Возвращает индексы ближайших объектов в отсортированном порядке.
-    public void SearchSorted(
+    public List<(TElement element, double distL2)> SearchSorted(
         Span<TElement> elements,
         T[] point,
-        List<(TElement elem, double dist)> result,
         double radiusL2 = double.MaxValue,
-        int max_cnt = 10
+        int max_cnt = 10,
+        List<(TElement element, double distL2)>? result = null
         ) {
 
-        result.Clear();
+        if (result == null) {
+            result = new();
+        } else {
+            result.Clear();
+        }
         SearchContext ctx = new SearchContext {
             restriction_radiusL2 = radiusL2,
             restriction_max_cnt = max_cnt,
@@ -251,7 +255,7 @@ public class KDTreeRapid<T, TElement>
                 int _cnt = result.Count;
                 if (result.Count < max_cnt) result.Add(default);
                 for (i = _cnt; i > 0; --i) {
-                    if (result[i - 1].dist > dist) {
+                    if (result[i - 1].distL2 > dist) {
                         if (i < max_cnt) {
                             result[i] = result[i - 1];
                         }
@@ -266,9 +270,10 @@ public class KDTreeRapid<T, TElement>
             WorstDistL2 = () => {
                 return (result.Count < max_cnt || result.Count == 0)  
                 ? double.MaxValue 
-                : result[^1].dist;
+                : result[^1].distL2;
             }
         };
         Search(elements, ctx);
+        return result;
     }
 }

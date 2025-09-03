@@ -60,7 +60,6 @@ class Program {
             CheckRecursive(elements.Slice(median_i + 1, elements.Length - 1 - median_i), dim_cnt, depth + 1);
         }
 
-        List<(Node elem, double dist)> res = new();
         foreach (var DIM in new[] { 2, 5, 10 }) {
             for (int i = 0; i < 100; i++) {
                 var elements = Generate(1000);
@@ -75,10 +74,10 @@ class Program {
                     }
                     double rad = rnd.NextDouble() * 100;
                     int max_cnt = rnd.Next(0, elements.Count);
-                    kdtree.SearchSorted(elements, p, res, rad, max_cnt);
+                    var res = kdtree.SearchSorted(elements, p, rad, max_cnt);
 
                     var need = elements.Where(x => kdtree.DistanceL2(p, x) <= rad).OrderBy(x => kdtree.DistanceL2(p, x)).Take(max_cnt);
-                    if (!need.SequenceEqual(res.Select(x => x.elem))) {
+                    if (!need.SequenceEqual(res.Select(x => x.element))) {
                         throw new Exception("bad");
                     }
                 }
@@ -99,7 +98,6 @@ class Program {
                 double build_time = 0;
                 rnd = new Random(seed);
                 double sign = 0;
-                List<(Node elem, double dist)> res = new();
                 for (int i = 0; i < N; i++) {
                     var elements = Generate(CNT);
                     KDTreeRapid<double, Node> kdtree = new();
@@ -108,10 +106,10 @@ class Program {
                     build_time += timer_build.Elapsed.TotalSeconds;
                     foreach (var elem in elements) {
                         // для каждой точки найдем 3 ближайшие
-                        kdtree.SearchSorted(elements, elem.point.Take(DIM).ToArray(), res, double.MaxValue, 3);
+                        var res = kdtree.SearchSorted(elements, elem.point.Take(DIM).ToArray(), double.MaxValue, 3);
                         int cnt = 1;
                         foreach (var r in res) {
-                            sign += r.elem.GetForDimension(0) * cnt++;
+                            sign += r.element.GetForDimension(0) * cnt++;
                             
                         }
                     }
@@ -219,10 +217,10 @@ public class Benchmark_Search {
 
     [Benchmark]
     public void KDTreeRapid_Search() {
-        List<(Node elem, double dist)> res = new();
+        List<(Node, double)> result = new();
         foreach (var elem in elements) {
             // для каждой точки найдем 3 ближайшие
-            kdtree.SearchSorted(elements, elem.point.Take(2).ToArray(), res, double.MaxValue, 3);
+            var res = kdtree.SearchSorted(elements, elem.point.Take(2).ToArray(), max_cnt:3, result: result);
         }
     }
 

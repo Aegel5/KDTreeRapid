@@ -2,7 +2,6 @@
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Loggers;
 using BenchmarkDotNet.Running;
-using Iced.Intel;
 using KDTreeRapid;
 using Supercluster.KDTree;
 using System;

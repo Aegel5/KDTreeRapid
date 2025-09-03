@@ -25,8 +25,7 @@ internal class Program {
         List<Node> elements = Generate(1000);
         KDTreeRapid<double, Node> kdtree = new();
         kdtree.BuildInPlace(elements, dimensions:2);
-        double rad = 5;
-        var res = kdtree.SearchSorted(elements, [10, 20], rad * rad, max_cnt: 1);
+        var res = kdtree.SearchSorted(elements, [10, 20], max_cnt: 1);
         Console.WriteLine($"Nearest point: {res[0].element.X} {res[0].element.Y}");
     }
 }

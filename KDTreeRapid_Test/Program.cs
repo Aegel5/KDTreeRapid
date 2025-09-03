@@ -1,7 +1,9 @@
 ﻿using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Columns;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Loggers;
 using BenchmarkDotNet.Running;
+using BenchmarkDotNet.Validators;
 using KDTreeRapid;
 using Supercluster.KDTree;
 using System;
@@ -150,8 +152,41 @@ class Program {
     }
     static void Main(string[] args) {
         TestCorrect();
-        BenchmarkRunner.Run( typeof(Program).Assembly);
+        BenchmarkRunner.Run( typeof(Program).Assembly, new Config());
         TestSpeed();
+    }
+}
+public class CustomLogger : ILogger {
+    
+    public string Id => "Mylogger";
+
+    public int Priority => 123;
+
+    public void Write(LogKind logKind, string text) {
+        if (logKind == LogKind.Statistic || logKind == LogKind.Error) {
+            ConsoleLogger.Default.Write(logKind, text);
+        }
+    }
+
+    public void WriteLine(LogKind logKind, string text) {
+        Write(logKind, text + Environment.NewLine);
+    }
+
+    public void WriteLine() {
+        Console.WriteLine();
+    }
+
+    public void Flush() {
+        // Implement any necessary flush logic for your custom logger
+    }
+}
+public class Config : ManualConfig {
+    public Config() {
+        AddLogger(new CustomLogger());
+        //AddLogger(ConsoleLogger.Default);
+        AddColumn(TargetMethodColumn.Method);
+        AddColumn(StatisticColumn.Mean);     
+        AddColumn(StatisticColumn.StdDev); 
     }
 }
 

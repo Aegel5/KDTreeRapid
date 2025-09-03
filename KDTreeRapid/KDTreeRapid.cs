@@ -19,11 +19,17 @@ public class KDTreeRapid<T, TElement>
         return a.GetForDimension(dim) < b.GetForDimension(dim);
     }
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    static bool More(IKDTreeElement<T> a, IKDTreeElement<T> b, int dim) {
+    static bool More(TElement a, TElement b, int dim) {
         return a.GetForDimension(dim) > b.GetForDimension(dim);
     }
-    Random rnd = new();
-    void SelectInplace(Span<TElement> a, int rank, int dim) {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    static void Sort(Span<TElement> a, int i, int j, int dim) {
+        if (a[i].GetForDimension(dim) > a[j].GetForDimension(dim)) {
+            (a[i], a[j]) = (a[j], a[i]);
+        }
+    }
+    static Random rnd = new();
+    static void SelectInplace(Span<TElement> a, int rank, int dim) {
 
         // Numerical Recipes: select
         // http://en.wikipedia.org/wiki/Selection_algorithm
@@ -160,9 +166,9 @@ public class KDTreeRapid<T, TElement>
     }
 
     public class SearchContext {
-        public Func<TElement, double, bool>? visit;
-        public Func<double>? worstDistL2 = null;
-        public T[] point;
+        public required Func<TElement, double, bool> Visit;
+        public Func<double>? WorstDistL2 = null;
+        public required T[] point;
         public int restriction_max_cnt = int.MaxValue;
         public double restriction_radiusL2 = double.MaxValue;
 
@@ -180,7 +186,7 @@ public class KDTreeRapid<T, TElement>
         double distL2 = DistanceL2(ctx.point, node);
         var point = ctx.point;
         if (distL2 <= ctx.restriction_radiusL2) {
-            if (!ctx.visit(node, distL2))
+            if (!ctx.Visit(node, distL2))
                 return false; // больше не заинтересованы в поиске!
         }
         if (elements.Length == 1) 
@@ -193,7 +199,7 @@ public class KDTreeRapid<T, TElement>
         if (!SearchRecursive(best, ctx, depth + 1))
             return false;
         if (diff <= ctx.restriction_radiusL2) { // возможно есть и в другой стороне! Проверим худший случай когда она лежит по оси.
-            if(ctx.worstDistL2 == null || diff < ctx.worstDistL2()) { // только если есть пустое место либо если правая сторона заведомо не хуже чем худшая уже известная точка
+            if(ctx.WorstDistL2 == null || diff < ctx.WorstDistL2()) { // только если есть пустое место либо если правая сторона заведомо не хуже чем худшая уже известная точка
                 var other = !toLeft ? Left(elements, median_i) : Right(elements, median_i);
                 if (!SearchRecursive(other, ctx, depth + 1))
                     return false;
@@ -208,13 +214,10 @@ public class KDTreeRapid<T, TElement>
         SearchContext ctx) 
     {
         if(ctx.restriction_radiusL2 == double.MaxValue && ctx.restriction_max_cnt == int.MaxValue) {
-            throw new Exception("Either restriction_radiusL2 or restriction_max_cnt must be specified");
+            throw new Exception("Either restriction_radiusL2 or restriction_max_cnt or both must be specified");
         }
-        if(ctx.visit == null) {
-            throw new Exception("Must specify visit");
-        }
-        if(ctx.restriction_max_cnt != int.MaxValue && ctx.worstDistL2 == null) {
-            throw new Exception("Must specify worstDistL2");
+        if(ctx.restriction_max_cnt != int.MaxValue && ctx.WorstDistL2 == null) {
+            throw new Exception("Must specify WorstDistL2 when have restriction max_cnt");
         }
         SearchRecursive(elements, ctx, 0);
     }
@@ -232,7 +235,7 @@ public class KDTreeRapid<T, TElement>
             restriction_radiusL2 = radiusL2,
             restriction_max_cnt = max_cnt,
             point = point,
-            visit = (x, dist) => {
+            Visit = (x, dist) => {
                 int i = 0;
                 int _cnt = result.Count;
                 if (result.Count < max_cnt) result.Add(default);
@@ -249,7 +252,7 @@ public class KDTreeRapid<T, TElement>
                 }
                 return true;
             },
-            worstDistL2 = () => {
+            WorstDistL2 = () => {
                 return (result.Count < max_cnt || result.Count == 0)  
                 ? double.MaxValue 
                 : result[^1].dist;

@@ -1,16 +1,16 @@
 ﻿using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Marshalling;
-using System.Xml.Linq;
 
 namespace KDTreeRapid;
 
 public interface IKDTreeElement<T> where T: INumber<T> {
-    int Index { get; set; }
     T GetForDimension(int dim_index);
 }
 
 public class KDTreeRapid<T, TElement> 
+
     where T: INumber<T> 
     where TElement : IKDTreeElement<T> {
 
@@ -99,34 +99,12 @@ public class KDTreeRapid<T, TElement>
             }
         }
     }
-    void CheckRecursive(
-    Span<TElement> elements,
-    int dim_cnt,
-    int depth
-    ) {
-        if (elements.Length <= 1)
-            return;
-        int axis = depth % dim_cnt;
-        int median_i = elements.Length / 2;
-        var node = elements[median_i];
-        for(int i = 0; i < median_i; i++) {
-            if (elements[i].GetForDimension(axis) > node.GetForDimension(axis)) {
-                throw new Exception("bad tree");
-            }
-        }
-        for (int i = median_i+1; i < elements.Length; i++) {
-            if (elements[i].GetForDimension(axis) < node.GetForDimension(axis)) {
-                throw new Exception("bad tree");
-            }
-        }
-        CheckRecursive(Left(elements, median_i), dim_cnt, depth + 1);
-        CheckRecursive(Right(elements, median_i), dim_cnt, depth + 1);
+    public void BuildInPlace(Span<TElement> elements, int dimensions) {
+        BuildRecursive(elements, dimensions, 0);
     }
-    public void Check(Span<TElement> elements, int dim_cnt) {
-        CheckRecursive(elements, dim_cnt, 0);
-    }
-    public void BuildInPlace(Span<TElement> elements, int dim_cnt) {
-        BuildRecursive(elements, dim_cnt, 0);
+
+    public void BuildInPlace(List<TElement> elements, int dimensions) {
+        BuildInPlace(CollectionsMarshal.AsSpan(elements), dimensions);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -177,14 +155,29 @@ public class KDTreeRapid<T, TElement>
     bool SearchRecursive(
         Span<TElement> elements,
         SearchContext ctx,
-        int depth
+        int depth,
+        T parent_value,
+        bool fromLeft
         ) {
         if (elements.IsEmpty) 
-            return true; 
+            return true;
         int median_i = elements.Length / 2;
         var node = elements[median_i];
-        double distL2 = DistanceL2(ctx.point, node);
         var point = ctx.point;
+        double distL2 = DistanceL2(point, node);
+
+        // check sorting. can be deleted for optimize
+        {
+            if (depth > 0) {
+                var value_as_parent = node.GetForDimension((depth - 1) % point.Length);
+                if (fromLeft
+                ? value_as_parent > parent_value
+                : value_as_parent < parent_value) {
+                    throw new Exception("Bad sorting");
+                }
+            }
+        }
+
         if (distL2 <= ctx.restriction_radiusL2) {
             if (!ctx.Visit(node, distL2))
                 return false; // больше не заинтересованы в поиске!
@@ -192,21 +185,28 @@ public class KDTreeRapid<T, TElement>
         if (elements.Length == 1) 
             return true;
         int axis = depth % point.Length;
-        bool toLeft = point[axis] < node.GetForDimension(axis); // искомая точка лежит левее
-        double diff = ToDouble(point[axis] - node.GetForDimension(axis));
+        var value = node.GetForDimension(axis);
+        bool toLeft = point[axis] < value; // искомая точка лежит левее
+        double diff = ToDouble(point[axis] - value);
         diff *= diff;
         var best = toLeft ? Left(elements, median_i) : Right(elements, median_i);
-        if (!SearchRecursive(best, ctx, depth + 1))
+        if (!SearchRecursive(best, ctx, depth + 1, value, toLeft))
             return false;
         if (diff <= ctx.restriction_radiusL2) { // возможно есть и в другой стороне! Проверим худший случай когда она лежит по оси.
             if(ctx.WorstDistL2 == null || diff < ctx.WorstDistL2()) { // только если есть пустое место либо если правая сторона заведомо не хуже чем худшая уже известная точка
                 var other = !toLeft ? Left(elements, median_i) : Right(elements, median_i);
-                if (!SearchRecursive(other, ctx, depth + 1))
+                if (!SearchRecursive(other, ctx, depth + 1, value, !toLeft))
                     return false;
             }
 
         }
         return true;
+    }
+
+    public void Search(
+    List<TElement> elements,
+    SearchContext ctx) {
+        Search(CollectionsMarshal.AsSpan(elements), ctx);
     }
 
     public void Search(
@@ -219,7 +219,17 @@ public class KDTreeRapid<T, TElement>
         if(ctx.restriction_max_cnt != int.MaxValue && ctx.WorstDistL2 == null) {
             throw new Exception("Must specify WorstDistL2 when have restriction max_cnt");
         }
-        SearchRecursive(elements, ctx, 0);
+        SearchRecursive(elements, ctx, 0, default, default);
+    }
+
+    public void SearchSorted(
+        List<TElement> elements,
+        T[] point,
+        List<(TElement elem, double dist)> result,
+        double radiusL2 = double.MaxValue,
+        int max_cnt = 10) {
+
+        SearchSorted(CollectionsMarshal.AsSpan(elements), point, result, radiusL2, max_cnt);
     }
 
     // Возвращает индексы ближайших объектов в отсортированном порядке.
@@ -230,6 +240,7 @@ public class KDTreeRapid<T, TElement>
         double radiusL2 = double.MaxValue,
         int max_cnt = 10
         ) {
+
         result.Clear();
         SearchContext ctx = new SearchContext {
             restriction_radiusL2 = radiusL2,

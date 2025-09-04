@@ -145,7 +145,7 @@ public class KDTreeRapid<T, TElement>
 
     public class SearchContext {
         public required Func<TElement, double, bool> Visit;
-        public Func<double>? WorstDistL2 = null;
+        public Func<double>? MaxDistanceL2 = null;
         public required T[] point;
         public double radiusL2 = double.MaxValue;
 
@@ -185,14 +185,14 @@ public class KDTreeRapid<T, TElement>
             return true;
         int axis = depth % point.Length;
         var value = node.GetForDimension(axis);
-        bool toLeft = point[axis] < value; // искомая точка лежит левее
-        double diff = ToDouble(point[axis] - value);
-        diff *= diff;
+        bool toLeft = point[axis] < value; // в какой стороне лежит искомая точка? Если равны - то без разницы куда идти.
+        double diffL2 = ToDouble(point[axis] - value);
+        diffL2 *= diffL2;
         var best = toLeft ? Left(elements, median_i) : Right(elements, median_i);
-        if (!SearchRecursive(best, ctx, depth + 1, value, toLeft))
+        if (!SearchRecursive(best, ctx, depth + 1, value, toLeft)) // в направлении приближения мы идем всегда, так как расстояние до искомой точки уменьшается
             return false;
-        if (diff <= ctx.radiusL2) { // возможно есть и в другой стороне! Проверим худший случай когда она лежит по оси.
-            if(ctx.WorstDistL2 == null || diff < ctx.WorstDistL2()) { // только если есть пустое место либо если правая сторона заведомо не хуже чем худшая уже известная точка
+        if (diffL2 <= ctx.radiusL2) { // отдаляться от точки и смотреть другую ветку мы имеем права, только если все еще остается теоретическая возможность попасть в радиус.
+            if(ctx.MaxDistanceL2 == null || diffL2 < ctx.MaxDistanceL2()) { // есть ли теоретическая возможность оказаться ближе чем другие уже известные точки?
                 var other = !toLeft ? Left(elements, median_i) : Right(elements, median_i);
                 if (!SearchRecursive(other, ctx, depth + 1, value, !toLeft))
                     return false;
@@ -234,6 +234,10 @@ public class KDTreeRapid<T, TElement>
         List<(TElement element, double distL2)>? result = null
         ) {
 
+        if(radius == double.MaxValue && max_cnt == int.MaxValue) {
+            throw new Exception($"Need specify {nameof(radius)} or {nameof(max_cnt)} or both. Otherwise all points will be returned.");
+        }
+
         if (result == null) {
             result = new();
         } else {
@@ -242,12 +246,12 @@ public class KDTreeRapid<T, TElement>
         SearchContext ctx = new SearchContext {
             radiusL2 = radius != double.MaxValue ? radius * radius : double.MaxValue,
             point = point,
-            Visit = (x, dist) => {
+            Visit = (x, distL2) => {
                 int i = 0;
                 int _cnt = result.Count;
                 if (result.Count < max_cnt) result.Add(default);
                 for (i = _cnt; i > 0; --i) {
-                    if (result[i - 1].distL2 > dist) {
+                    if (result[i - 1].distL2 > distL2) {
                         if (i < max_cnt) {
                             result[i] = result[i - 1];
                         }
@@ -255,11 +259,11 @@ public class KDTreeRapid<T, TElement>
                         break;
                 }
                 if (i < max_cnt) {
-                    result[i] = (x, dist);
+                    result[i] = (x, distL2);
                 }
                 return true;
             },
-            WorstDistL2 = () => {
+            MaxDistanceL2 = () => {
                 return (result.Count < max_cnt || result.Count == 0)
                 ? double.MaxValue
                 : result[^1].distL2;

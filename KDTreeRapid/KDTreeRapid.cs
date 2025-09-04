@@ -147,8 +147,7 @@ public class KDTreeRapid<T, TElement>
         public required Func<TElement, double, bool> Visit;
         public Func<double>? WorstDistL2 = null;
         public required T[] point;
-        public int restriction_max_cnt = int.MaxValue;
-        public double restriction_radiusL2 = double.MaxValue;
+        public double radiusL2 = double.MaxValue;
 
     }
 
@@ -178,7 +177,7 @@ public class KDTreeRapid<T, TElement>
             }
         }
 
-        if (distL2 <= ctx.restriction_radiusL2) {
+        if (distL2 <= ctx.radiusL2) {
             if (!ctx.Visit(node, distL2))
                 return false; // больше не заинтересованы в поиске!
         }
@@ -192,7 +191,7 @@ public class KDTreeRapid<T, TElement>
         var best = toLeft ? Left(elements, median_i) : Right(elements, median_i);
         if (!SearchRecursive(best, ctx, depth + 1, value, toLeft))
             return false;
-        if (diff <= ctx.restriction_radiusL2) { // возможно есть и в другой стороне! Проверим худший случай когда она лежит по оси.
+        if (diff <= ctx.radiusL2) { // возможно есть и в другой стороне! Проверим худший случай когда она лежит по оси.
             if(ctx.WorstDistL2 == null || diff < ctx.WorstDistL2()) { // только если есть пустое место либо если правая сторона заведомо не хуже чем худшая уже известная точка
                 var other = !toLeft ? Left(elements, median_i) : Right(elements, median_i);
                 if (!SearchRecursive(other, ctx, depth + 1, value, !toLeft))
@@ -213,13 +212,7 @@ public class KDTreeRapid<T, TElement>
         Span<TElement> elements,
         SearchContext ctx) 
     {
-        if(ctx.restriction_radiusL2 == double.MaxValue && ctx.restriction_max_cnt == int.MaxValue) {
-            throw new Exception("Either restriction_radiusL2 or restriction_max_cnt or both must be specified");
-        }
-        if(ctx.restriction_max_cnt != int.MaxValue && ctx.WorstDistL2 == null) {
-            throw new Exception("Must specify WorstDistL2 when have restriction max_cnt");
-        }
-        SearchRecursive(elements, ctx, 0, default, default);
+        SearchRecursive(elements, ctx, 0, T.Zero, default);
     }
 
     public List<(TElement element, double distL2)> SearchSorted(
@@ -247,8 +240,7 @@ public class KDTreeRapid<T, TElement>
             result.Clear();
         }
         SearchContext ctx = new SearchContext {
-            restriction_radiusL2 = radius*radius,
-            restriction_max_cnt = max_cnt,
+            radiusL2 = radius*radius,
             point = point,
             Visit = (x, dist) => {
                 int i = 0;

@@ -162,18 +162,28 @@ public class CustomLogger : ILogger {
 
     public int Priority => 123;
 
+    bool now_new_line = true;
+
     public void Write(LogKind logKind, string text) {
-        if (logKind == LogKind.Statistic || logKind == LogKind.Error) {
-            ConsoleLogger.Default.Write(logKind, text);
+        switch (logKind) {
+            case LogKind.Statistic:
+            case LogKind.Error:
+            case LogKind.Warning:
+                ConsoleLogger.Default.Write(logKind, text);
+                now_new_line = false;
+                break;
         }
     }
 
     public void WriteLine(LogKind logKind, string text) {
-        Write(logKind, text + Environment.NewLine);
+        Write(logKind, text);
+        WriteLine();
     }
 
     public void WriteLine() {
+        if (now_new_line) return;
         Console.WriteLine();
+        now_new_line = true;
     }
 
     public void Flush() {

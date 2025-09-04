@@ -166,7 +166,7 @@ public class KDTreeRapid<T, TElement>
         var point = ctx.point;
         double distL2 = DistanceL2(point, node);
 
-        // check sorting. can be deleted for optimize
+        // check sorting. just for convenience. can be deleted for optimize
         {
             if (depth > 0) {
                 var value_as_parent = node.GetForDimension((depth - 1) % point.Length);
@@ -226,7 +226,7 @@ public class KDTreeRapid<T, TElement>
         List<TElement> elements,
         T[] point,
         double radius = double.MaxValue,
-        int max_cnt = 10,
+        int max_cnt = int.MaxValue,
         List<(TElement, double)>? result = null) {
 
         return SearchSorted(CollectionsMarshal.AsSpan(elements), point, radius, max_cnt, result);
@@ -237,7 +237,7 @@ public class KDTreeRapid<T, TElement>
         Span<TElement> elements,
         T[] point,
         double radius = double.MaxValue,
-        int max_cnt = 10,
+        int max_cnt = int.MaxValue,
         List<(TElement element, double distL2)>? result = null
         ) {
 

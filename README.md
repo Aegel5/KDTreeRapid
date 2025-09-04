@@ -4,7 +4,7 @@ The Kd-tree is written entirely in C# without any dependencies.
 
 ## About
 - Fully static. After any updates need rebuild.
-- Designed for fast rebuild. Actually, building a tree has the same speed as just sorting array.
+- Designed for fast rebuild. Actually, building the tree has the same speed as just sorting an array.
 - Fast search. All functions do minimum allocations, thus no pressure for GC.
 
 ## Features

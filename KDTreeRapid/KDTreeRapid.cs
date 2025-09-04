@@ -240,7 +240,7 @@ public class KDTreeRapid<T, TElement>
             result.Clear();
         }
         SearchContext ctx = new SearchContext {
-            radiusL2 = radius*radius,
+            radiusL2 = radius != double.MaxValue ? radius * radius : double.MaxValue,
             point = point,
             Visit = (x, dist) => {
                 int i = 0;
@@ -255,13 +255,13 @@ public class KDTreeRapid<T, TElement>
                         break;
                 }
                 if (i < max_cnt) {
-                    result[i] = (x,dist);
+                    result[i] = (x, dist);
                 }
                 return true;
             },
             WorstDistL2 = () => {
-                return (result.Count < max_cnt || result.Count == 0)  
-                ? double.MaxValue 
+                return (result.Count < max_cnt || result.Count == 0)
+                ? double.MaxValue
                 : result[^1].distL2;
             }
         };

@@ -3,7 +3,6 @@ using BenchmarkDotNet.Columns;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Loggers;
 using BenchmarkDotNet.Running;
-using BenchmarkDotNet.Validators;
 using KDTreeRapid;
 using Supercluster.KDTree;
 using System;
@@ -152,8 +151,25 @@ class Program {
     }
     static void Main(string[] args) {
         TestCorrect();
+        TestWorst();
         BenchmarkRunner.Run( typeof(Program).Assembly, new Config());
         TestSpeed();
+    }
+
+    static void TestWorst() { // 2*sqrt(N)
+
+        List<Node> elements = new();
+        for (int i = 0; i < 300000; i++) {
+            elements.Add(new Node());
+        }
+        var kdtree = new KDTreeRapid<double, Node>();
+        kdtree.BuildInPlace(elements, 2);
+        var timer = Stopwatch.StartNew();
+        for (int i = 0; i < 30000; i++) {
+            var res = kdtree.SearchSorted(elements, [0, 1000+i], 5);
+            if (res.Count != 0) throw new Exception("");
+        }
+        Console.WriteLine(timer.Elapsed.TotalSeconds);
     }
 }
 public class CustomLogger : ILogger {
@@ -243,10 +259,12 @@ public class Benchmark_Search {
 
     [GlobalSetup]
     public void Setup() {
+
         elements = Program.Generate(300000, new Random(999));
 
         kdtree = new();
         kdtree.BuildInPlace(elements, 2);
+
 
         kdtree2 = new(dimensions: 2,
     points: elements.Select(x => x.point.Take(2).ToArray()).ToArray(),
@@ -276,4 +294,7 @@ public class Benchmark_Search {
             var res = kdtree2.NearestNeighbors(elem.point.Take(2).ToArray(), 3);
         }
     }
+
 }
+
+

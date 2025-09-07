@@ -1,9 +1,10 @@
 ﻿using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.Marshalling;
 
 namespace KDTreeRapid;
+
+// https://en.wikipedia.org/wiki/K-d_tree
 
 public interface IKDTreeElement<T> where T: INumber<T> {
     T GetForDimension(int dim_index);
@@ -22,12 +23,7 @@ public class KDTreeRapid<T, TElement>
     static bool More(TElement a, TElement b, int dim) {
         return a.GetForDimension(dim) > b.GetForDimension(dim);
     }
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    static void Sort(Span<TElement> a, int i, int j, int dim) {
-        if (a[i].GetForDimension(dim) > a[j].GetForDimension(dim)) {
-            (a[i], a[j]) = (a[j], a[i]);
-        }
-    }
+
     static Random rnd = new();
     static void SelectInplace(Span<TElement> a, int rank, int dim) {
 
@@ -47,8 +43,8 @@ public class KDTreeRapid<T, TElement>
             }
 
             // choose pivot: random or just middle
-            int middle = (low + high) >> 1;
-            //int middle = rnd.Next(low, high + 1);
+            //int middle = (low + high) >> 1;
+            int middle = rnd.Next(low, high + 1);
 
             (a[middle], a[low + 1]) = (a[low + 1], a[middle]);
 
@@ -118,18 +114,19 @@ public class KDTreeRapid<T, TElement>
 
     void BuildRecursive(
         Span<TElement> elements,
-        int dim_cnt,
+        int dimensions,
         int depth
         ) {
         if (elements.Length <= 1)
             return;
-        int axis = depth % dim_cnt;
+        int axis = depth % dimensions;
         int median_i = elements.Length / 2;
         SelectInplace(elements, median_i, axis);
-        BuildRecursive(Left(elements, median_i), dim_cnt, depth + 1);
-        BuildRecursive(Right(elements, median_i), dim_cnt, depth + 1);
+        BuildRecursive(Left(elements, median_i), dimensions, depth + 1);
+        BuildRecursive(Right(elements, median_i), dimensions, depth + 1);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public double DistanceL2(T[] a, TElement b) {
         double sum = 0;
         for (int i = 0; i < a.Length; i++) {
@@ -139,8 +136,9 @@ public class KDTreeRapid<T, TElement>
         return sum;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     static double ToDouble(T val) {
-        return double.CreateSaturating(val);
+        return double.CreateTruncating(val);
     }
 
     public class SearchContext {
